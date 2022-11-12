@@ -8,46 +8,51 @@ import io.jokester.nuthatch.generated.quill.{public => T}
 import redis.clients.jedis.Jedis
 
 object TestAppContext {
-  def build(): AppContextBase with TestHelper = {
-    new AppContextBase with TestHelper with LazyLogging {
-      self =>
-      def rootConfig: Config = ConfigFactory.load()
+  def build(): TestAppContext = new TestAppContext {}
 
-      logger.debug("got rootConfig: {}", rootConfig)
+  trait TestAppContext extends AppContextBase with TestHelper with LazyLogging {
 
-      override def redisConfig: Config = rootConfig.getConfig("test.redis")
+    self =>
+    def rootConfig: Config = ConfigFactory.load()
 
-      override val quill: QuillFactory.RdbContext =
-        QuillFactory.unsafeCreateNonPolledCtx(rootConfig.getConfig("test.postgres"))._2
+    logger.debug("got rootConfig: {}", rootConfig)
 
-      override val redis: Resource[IO, Jedis] = RedisFactory.resourceFromConfig(redisConfig)
+    override def redisConfig: Config = rootConfig.getConfig("test.redis")
 
-      override object web extends WebConfig {
-        protected override val siteConfig: Config = rootConfig.getConfig("site")
-      }
+    override val quill: QuillFactory.RdbContext =
+      QuillFactory.unsafeCreateNonPolledCtx(rootConfig.getConfig("test.postgres"))._2
 
-      override object providers extends Providers {
-        protected override val rootConfig: Config = self.rootConfig
+    override val redis: Resource[IO, Jedis] = RedisFactory.resourceFromConfig(redisConfig)
 
-        override def twitter: TwitterProvider = new TwitterProvider {}
-      }
-
-      override def close(): IO[Unit] = for {
-        _ <- IO {
-          quill.close()
-        };
-        _ <- redis.use(jedis =>
-          IO {
-            jedis.close()
-          },
-        )
-      } yield ()
+    override object web extends WebConfig {
+      protected override val siteConfig: Config = rootConfig.getConfig("site")
     }
+
+    override object providers extends TestProviders {
+      protected override val rootConfig: Config = self.rootConfig
+
+      override def twitter: TwitterProvider = new TwitterProvider {}
+    }
+
+    override def close(): IO[Unit] = for {
+      _ <- IO {
+        quill.close()
+      };
+      _ <- redis.use(jedis =>
+        IO {
+          jedis.close()
+        },
+      )
+    } yield ()
 
   }
 
+  trait TestProviders extends Providers {
+    override val mailer: TestMailer = new TestMailer
+  }
+
   trait TestHelper {
-    self: AppContextBase =>
+    self: TestAppContext =>
 
     def cleanDb(): Unit = {
       import quill._
@@ -57,7 +62,10 @@ object TestAppContext {
         run(query[T.UserPassword].delete)
         run(query[T.User].delete)
       }
+    }
 
+    def getMails(): Seq[MailIntent] = {
+      providers.mailer.sentMails
     }
 
   }

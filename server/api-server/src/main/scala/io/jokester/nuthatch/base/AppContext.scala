@@ -6,7 +6,6 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import org.http4s.Query
 import redis.clients.jedis.Jedis
-import twitter4j.{OAuth2Authorization, OAuth2Token, Twitter}
 
 import scala.util.{Failure, Try}
 
@@ -31,8 +30,10 @@ class AppContext(val rootConfig: Config) extends AppContextBase with LazyLogging
 
   override val quill: QuillFactory.RdbContext = quillResources._2
 
-  override val providers = new Providers {
+  override val providers: Providers = new Providers {
     protected override val rootConfig: Config = AppContext.this.rootConfig
+
+    override def mailer = Mailer.get(rootConfig.getConfig("mailer"))
 
     override def twitter: TwitterProvider = new TwitterProvider {}
   }
@@ -71,54 +72,6 @@ trait AppContextBase extends RedisKeys {
   def redis: Resource[IO, Jedis]
 
   def close(): IO[Unit]
-}
-
-/** external service
-  */
-private[base] trait Providers {
-  protected def rootConfig: Config
-
-  val mailer: Mailer = DummyMailer
-
-  protected trait TwitterProvider {
-    def config: Config = rootConfig.getConfig("twitter")
-
-    def fetchAppOAuth2Token: IO[OAuth2Token] = {
-      val auth = OAuth2Authorization.getInstance(
-        config.getConfig("oauth1").getString("consumer_key"),
-        config.getConfig("oauth1").getString("consumer_secret"),
-      )
-      IO(auth.getOAuth2Token)
-    }
-
-    def buildAppAuthedClient(): Twitter = {
-      Twitter
-        .newBuilder()
-        .applicationOnlyAuthEnabled(true)
-        .oAuthConsumer(
-          config.getConfig("oauth1").getString("consumer_key"),
-          config.getConfig("oauth1").getString("consumer_secret"),
-        )
-        .oAuth2Token("bearer", config.getConfig("oauth2").getString("bearer_token"))
-        .build()
-    }
-
-    /** user-authed twitter client
-      */
-    def buildOAuth1AuthClient(oauthAccessToken: String, oAuthTokenSecret: String): Twitter = {
-      Twitter
-        .newBuilder()
-        .oAuthConsumer(
-          config.getConfig("oauth1").getString("consumer_key"),
-          config.getConfig("oauth1").getString("consumer_secret"),
-        )
-        .oAuthAccessToken(oauthAccessToken, oAuthTokenSecret)
-        .build()
-    }
-
-  }
-
-  def twitter: TwitterProvider
 }
 
 /** web stuff
