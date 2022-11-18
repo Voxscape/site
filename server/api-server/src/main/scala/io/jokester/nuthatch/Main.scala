@@ -1,7 +1,7 @@
 package io.jokester.nuthatch
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
-import com.comcast.ip4s.IpLiteralSyntax
+import com.comcast.ip4s.{ipv4, port}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import io.jokester.api.OpenAPIBuilder

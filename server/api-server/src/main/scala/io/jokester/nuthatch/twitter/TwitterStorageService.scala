@@ -5,6 +5,7 @@ import io.circe.Json
 import io.jokester.nuthatch.base.AppContextBase
 import io.jokester.nuthatch.generated.quill.{public => T}
 import twitter4j.v1.{User => TwitterUser}
+import io.getquill._
 
 class TwitterStorageService(ctx: AppContextBase) {
   private case class NewTwitterUser(twitterId: Long, twitterProfile: Json)
@@ -40,7 +41,7 @@ class TwitterStorageService(ctx: AppContextBase) {
 
   def upsertFollowers(followee: Long, followers: Seq[Long]): IO[Unit] = {
     if (followers.isEmpty) {
-      return IO.pure()
+      return IO.pure(())
     }
 
     IO {
@@ -75,7 +76,7 @@ class TwitterStorageService(ctx: AppContextBase) {
 
   def upsertFollowees(follower: Long, followees: Seq[Long]): IO[Unit] = {
     if (followees.isEmpty) {
-      return IO.pure()
+      return IO.pure(())
     }
 
     IO {

@@ -1,13 +1,13 @@
 import Dependencies._
 
 val scala2Version = "2.13.7"
-val scala3Version = "3.1.3" // FIXME: wait for quill-codegen to generate for scala3
+val scala3Version = "3.2.1"
 
 // "bare" definition, applies to all projects
 ThisBuild / version          := "current"
 ThisBuild / organization     := "io.jokester.nuthatch"
 ThisBuild / organizationName := "gh/jokester/nuthatch"
-ThisBuild / scalaVersion     := scala2Version
+ThisBuild / scalaVersion     := scala3Version
 ThisBuild / scalacOptions ++= Seq("-Xlint")
 //ThisBuild / coverageEnabled := true // this is not the way to do it. should "sbt coverageOn" instead
 
@@ -24,7 +24,7 @@ lazy val scalaCommons = (project in file("scala-commons"))
       circeDeps,
       tapirDeps,
       authDeps,
-      quillDeps,
+      quill4Deps,
       testDeps,
     ).flatten,
     dependencyOverrides ++= Seq.empty,
@@ -39,7 +39,7 @@ lazy val apiServer = (project in file("api-server"))
       circeDeps,
       tapirDeps,
       authDeps,
-      quillDeps,
+      quill4Deps,
       redisDeps,
       oauthDeps,
       catsDeps,
@@ -60,7 +60,9 @@ lazy val rdbCodegen = (project in file("rdb-codegen"))
   .settings(
     name := "rdb-codegen",
     libraryDependencies ++= basicDeps ++ quillCodegenDeps ++ circeDeps,
-//    excludeDependencies ++= incompatibleDependencies,
+    scalaVersion := scala2Version,
+
+    //    excludeDependencies ++= incompatibleDependencies,
   )
 
 lazy val enableQuillLog = taskKey[Unit]("enable quill logs")

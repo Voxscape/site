@@ -9,6 +9,7 @@ import io.getquill.{PostgresDialect, PostgresJdbcContext, Query}
 import io.jokester.nuthatch.generated.quill.public.PublicExtensions
 import io.jokester.nuthatch.generated.quill.{public => T}
 import io.jokester.quill.{FixedPostgresNaming, QuillCirceJsonEncoding, QuillDataSource}
+import io.getquill._
 
 import java.io.Closeable
 import java.time.OffsetDateTime
@@ -30,7 +31,7 @@ object QuillFactory {
         val q = quote {
           sql"SELECT 1".as[Query[Int]]
         }
-        run(q) == 1
+        run(q).headOption.contains(1)
       }
     }
   }

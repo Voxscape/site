@@ -8,6 +8,7 @@ import io.jokester.nuthatch.generated.quill.{public => T}
 import org.http4s.Query
 import org.springframework.security.crypto.bcrypt.BCrypt
 import redis.clients.jedis.params.SetParams
+import io.getquill._
 
 import java.util.UUID
 

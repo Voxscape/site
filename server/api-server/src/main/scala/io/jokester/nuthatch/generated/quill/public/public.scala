@@ -1,5 +1,7 @@
 package io.jokester.nuthatch.generated.quill.public
 
+import io.getquill._
+
 case class TwitterUser(id: Int, twitterUserId: Long, twitterUserProfile: io.circe.Json, createdAt: java.time.OffsetDateTime, updatedAt: java.time.OffsetDateTime)
 
 case class User(id: Int, email: String, profile: Option[io.circe.Json], createdAt: java.time.OffsetDateTime, updatedAt: java.time.OffsetDateTime)
